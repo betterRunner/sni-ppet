@@ -1,6 +1,6 @@
 
 <p align="center">
-  <a href="https://github.com/betterRunner/sni-ppet">
+  <a href="https://github.com/betterRunner/sni-ppet-private">
     <img width="300" src="https://user-images.githubusercontent.com/7123136/136742302-8b5e7e49-ae1d-417f-88a4-cac00bf91f87.png">
   </a>
   <br>
@@ -8,6 +8,8 @@
 
 <p align="center">A snippet vscode extension: design your own snippets and access them progressively.
 </p>
+
+<video src="./fly-snippet.mov">
 
 ## Features
 
