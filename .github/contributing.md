@@ -1,6 +1,6 @@
-# Context-Note Contributing Guide
+# Sni-ppet Contributing Guide
 
-Hi! Thank you for joining me to build context-note together.
+Hi! Thank you for joining me to build sni-ppet together.
 
 ## Pull Request Guidelines
 
@@ -20,8 +20,6 @@ Hi! Thank you for joining me to build context-note together.
 
 ## Development Setup
 
-Tags: `Chrome Extension`, `Vue3`, `Vite`, `element-plus`
-
 You will need [Yarn](https://classic.yarnpkg.com/en/docs/cli/install/)/
 
 After cloning the repo, run:
@@ -31,14 +29,4 @@ After cloning the repo, run:
 yarn
 ```
 
-### Build extension dist folder and load it in chrome browser
-
-Since chrome extension does not support hrm debugging (so far as I know), we need to build the code as a dist folder and load it from chrome browser, you can read more [here](https://support.google.com/chrome_webstore/answer/2664769?hl=en) about how to load the dist folder and run the extension.
-
-```bash
-# build extension in dev mode, where you can check source code and console info
-yarn dev
-
-# build extension in prod mode, which is used when you finished development and ready to release it
-yarn build
-```
+Then click `Run and Debug` -> `Debugging` in [Visual Stuio Code](https://code.visualstudio.com/) to debug the extension, more details please check out [the official extension development document](https://code.visualstudio.com/api/get-started/your-first-extension)
