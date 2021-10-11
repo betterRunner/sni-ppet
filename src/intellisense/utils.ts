@@ -9,7 +9,7 @@ import { SnippetMeta, MetaOption } from "../types/meta";
 import { IntellisenseCommandArguments } from "../types/intellisense";
 import { Snippet } from "../types/snippet";
 import { GenSnippetFn, Patch } from "../types/common";
-import { fillMetaVariables } from "../metas/utils";
+import { fillMetaVariables } from "../utils/meta";
 
 function genCommandOptions(
   options: Record<string, MetaOption>

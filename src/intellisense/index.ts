@@ -1,12 +1,12 @@
 import * as vscode from "vscode";
-import { readMetasFromConfig } from "../metas";
 import { IntellisenseMeta } from "../types/meta";
 import { getPositionByOffset } from "../utils/vscode";
 import { Snippet } from "../types/snippet";
 import { genCompletionItem, genCompletionItemsByMeta } from "./utils";
 
 export async function getCompletionItemsByContextText(
-  contextText: string
+  contextText: string,
+  metas: IntellisenseMeta[],
 ): Promise<vscode.CompletionItem[]> {
   const _genCompletionItems = (
     meta: IntellisenseMeta
@@ -73,7 +73,6 @@ export async function getCompletionItemsByContextText(
       return item;
     });
   };
-  const metas = await readMetasFromConfig();
   return metas.reduce(
     (prev, meta) => [...prev, ..._genCompletionItems(meta)],
     [] as vscode.CompletionItem[]
