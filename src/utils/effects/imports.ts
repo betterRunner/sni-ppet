@@ -1,5 +1,6 @@
 import { Position } from "vscode";
-import { PatchImport, CodeRange } from "../../types/common";
+import { CodeRange } from "../../types/common";
+import { PatchImport } from "../../types/meta";
 import { RE_IMPORT } from "../constant";
 import {
   getLineAndCharacterNumFromOffset,

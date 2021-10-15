@@ -1,4 +1,5 @@
-import { Patch, PatchImport, PatchSlot, PatchType, CodeRange } from "../../types/common";
+import { CodeRange } from "../../types/common";
+import { Patch, PatchImport, PatchSlot, PatchType } from '../../types/meta';
 import { insertImportEffectPatches } from "./imports";
 import { insertSlotEffectPatches } from "./slots";
 

@@ -1,4 +1,5 @@
-import { PatchSlot, CodeRange } from "../../types/common";
+import { CodeRange } from "../../types/common";
+import { PatchSlot } from "../../types/meta";
 import { getCurrentFileText, insertSnippetByOffset } from "../vscode";
 import { searchLastImportOffsetOfCode } from "../code";
 
