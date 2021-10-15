@@ -9,29 +9,33 @@ import { Meta } from "../types/meta";
 const CONFIG_FOLDER_NAME = ".sni-ppet";
 const META_TEMPLATE_REPO_URL =
   "https://github.com/betterRunner/sni-ppet-meta-template.git";
+const META_FOLDER_METAS = "metas";
+const META_FOLDER_CONFIG = "config.env";
 
-function cloneMetaTemplatesFromRepo(): Promise<void> {
+function cloneMetaTemplatesFromRepo(overwrite: boolean = false): Promise<void> {
   return new Promise(async (succ, reject) => {
     const curProjectPath = getCurrentProjectPath();
     if (curProjectPath) {
       const configPath = resolve(curProjectPath, CONFIG_FOLDER_NAME);
-      const configMetaPath = resolve(configPath, "metas");
-      const tempPath = resolve(configPath, "temp");
-      const tempMetaPath = resolve(tempPath, "metas");
-      const configMetaUri = vscode.Uri.file(configMetaPath);
+      const tempPath = resolve(configPath, ".temp");
+      const configMetaUri = vscode.Uri.file(resolve(configPath, META_FOLDER_METAS));
 
-      // 0. if `metas` folder exists, just skip this function
+      // 1. overwrite needs deleting `configMetaUri` first
+      if (overwrite) {
+        await vscode.workspace.fs.delete(configMetaUri);
+      }
+      // 2. if `metas` folder exists, just skip this function
       try {
         const stat = await vscode.workspace.fs.stat(configMetaUri);
         if (stat?.type === vscode.FileType.Directory) {
           succ();
           return;
         }
-      } catch(e) {
+      } catch (e) {
         // do nothing
       }
 
-      // 1. clone the project from remote repo by `git clone` to `tempPath`
+      // 3. clone the project from remote repo by `git clone` to `tempPath`
       const cp = require("child_process");
       cp.exec(
         `git clone ${META_TEMPLATE_REPO_URL} ${tempPath}`,
@@ -40,13 +44,17 @@ function cloneMetaTemplatesFromRepo(): Promise<void> {
             reject(err);
             return;
           }
-          // 2. copy the `metas` folder from `tempPath` to `configMetaPath`
-          const tempMetaUri = vscode.Uri.file(tempMetaPath);
+          // 4. copy the `metas` folder from `tempPath` to `configMetaPath`
+          const tempMetaUri = vscode.Uri.file(resolve(tempPath, META_FOLDER_METAS));
           await vscode.workspace.fs.createDirectory(configMetaUri);
           await vscode.workspace.fs.copy(tempMetaUri, configMetaUri, {
             overwrite: true,
           });
-          // 3. delete the `tempPath`
+          await vscode.workspace.fs.copy(
+            vscode.Uri.file(resolve(tempPath, META_FOLDER_CONFIG)),
+            vscode.Uri.file(resolve(configPath, META_FOLDER_CONFIG)),
+          );
+          // 5. delete the `tempPath`
           vscode.workspace.fs.delete(vscode.Uri.file(tempPath), {
             recursive: true,
             useTrash: false,
@@ -80,6 +88,7 @@ async function removeCompiledJsFiles(rootPath: string) {
 export async function readMetasFromConfig(): Promise<Meta[]> {
   const res: Meta[] = [];
 
+  // if meta folder doesn't exist, clone the template code from github repo
   await cloneMetaTemplatesFromRepo();
 
   const curProjectPath = getCurrentProjectPath();
@@ -104,7 +113,7 @@ export async function readMetasFromConfig(): Promise<Meta[]> {
       if (compileSucc) {
         const metaPath = resolve(indexPath, "..", "index.js");
         const meta = (await import(metaPath))?.default; // dynamically import
-        res.push(meta);
+        res.push(...meta);
       }
     }
     // delete the compiled CommonJS js code
