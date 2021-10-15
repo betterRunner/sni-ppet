@@ -1,8 +1,8 @@
-import type { Position, QuickPickItem } from "vscode";
-import type { Snippet } from "./snippet";
+import type { Position } from "vscode";
+import type { Snippet, SnippetOption } from "./snippet";
 
 export interface IntellisenseCommandArguments {
   snippet: Snippet;
   startPosition: Position;
-  options?: QuickPickItem[]; // the options that provides more details of finally snippet code
+  options?: SnippetOption[]; // the options that provides more details of finally snippet code
 }

@@ -1,77 +1,43 @@
 import * as vscode from "vscode";
-import { IntellisenseMeta } from "../types/meta";
-import { getPositionByOffset } from "../utils/vscode";
 import { Snippet } from "../types/snippet";
+import { Meta } from "../types/meta";
+import { getPositionByOffset } from "../utils/vscode";
 import { genCompletionItem, genCompletionItemsByMeta } from "./utils";
 
 export async function getCompletionItemsByContextText(
   contextText: string,
-  metas: IntellisenseMeta[],
+  metas: Meta[]
 ): Promise<vscode.CompletionItem[]> {
-  const _genCompletionItems = (
-    meta: IntellisenseMeta
-  ): vscode.CompletionItem[] => {
-    const { snippetMetas = [], genSnippetFn, effects = [] } = meta;
+  const _genCompletionItems = (meta: Meta): vscode.CompletionItem[] => {
+    const { items = [], effects = [], matchTag = "", tpl = "" } = meta;
 
-    // only meta with non-empty `itemsMap` need progressive command
-    const progressiveMatchTags = Array.from(
-      new Set(
-        snippetMetas.reduce(
-          (prev, cur) =>
-            Object.keys(cur.itemsMap).length ? [...prev, cur.matchTag] : prev,
-          [] as string[]
-        )
-      )
-    );
-    const reEnter = new RegExp(
-      `(?:^|\\s+)(${progressiveMatchTags.join("|")}).$`
-    );
+    const reEnter = new RegExp(`(?:^|\\s+)(${matchTag}).$`);
     const match = contextText.match(reEnter);
     if (match) {
+      // the non-first completion item
+
       // matching case `.` is the time to record the position
       const startPosition = getPositionByOffset(0, match[1].length + 1);
 
       // generate completion items from snippetMeta
-      return snippetMetas.reduce(
-        (prev, snippetMeta) => [
-          ...prev,
-          ...genCompletionItemsByMeta(
-            snippetMeta,
-            startPosition,
-            genSnippetFn,
-            effects
-          ),
-        ],
-        [] as vscode.CompletionItem[]
-      );
-    }
+      return genCompletionItemsByMeta(meta, startPosition, effects);
+    } else {
+      // the first completion item
 
-    // default completion item
-    const matchTags = Array.from(
-      new Set(
-        snippetMetas.reduce(
-          (prev, cur) => [...prev, cur.matchTag],
-          [] as string[]
-        )
-      )
-    );
-    return matchTags.map((t) => {
-      const isProgressive = progressiveMatchTags.includes(t);
-      let snippet;
-      if (!isProgressive) {
-        // non-progressive meta needs to give the snippet parameter to `genCompletionItem` thus generating the snippet directly
-        const snippetMeta = snippetMetas.find((meta) => meta.matchTag === t);
-        snippet = {
-          tpl: snippetMeta?.tpl || "",
-          variables: {},
-          genSnippetFn: (_) => _,
-          effectPatches: meta.effects,
-        } as Snippet;
-      }
+      // the meta whose `items` is empty is non-progressive one
+      const isProgressive = !!items.length;
+      // non-progressive meta needs to give the snippet parameter to `genCompletionItem` thus generating the snippet directly
+      const snippet = !isProgressive
+        ? ({
+            tpl: tpl || "",
+            slots: [],
+            effects,
+          } as Snippet)
+        : undefined;
+      // no-progressive snippet start position offset is 0
       const startPosition = getPositionByOffset(0, 1);
-      const item = genCompletionItem(t, startPosition, snippet);
-      return item;
-    });
+      return [genCompletionItem(matchTag, startPosition, snippet)];
+    }
   };
   return metas.reduce(
     (prev, meta) => [...prev, ..._genCompletionItems(meta)],

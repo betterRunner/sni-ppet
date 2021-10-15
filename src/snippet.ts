@@ -1,12 +1,23 @@
 import * as vscode from "vscode";
 
-import { insertSnippet, getActivePosition, getCurrentFileText, getCurOffsetByPosition } from "./utils/vscode";
+import {
+  insertSnippet,
+  getActivePosition,
+  getCurrentFileText,
+  getCurOffsetByPosition,
+} from "./utils/vscode";
 import { getCompletionItemsByContextText } from "./intellisense";
+import { readMetasFromConfig } from "./metas";
 import { IntellisenseCommandArguments } from "./types/intellisense";
+import { Meta, Slot } from "./types/meta";
 import { Snippet } from "./types/snippet";
-import { insertEffectPatches } from "./utils/effects";
-import { getLineAndCharacterNumFromOffset } from "./utils/utils";
 import { CodeRange } from "./types/common";
+import { insertEffectPatches } from "./utils/effects";
+import {
+  getLineAndCharacterNumFromOffset,
+  isObject,
+  valToCodeStr,
+} from "./utils/utils";
 
 /**
  * Here is how fly-snippet runs:
@@ -30,7 +41,50 @@ function correctOffsetByCodeRanges(offset: number, codeRanges: CodeRange[]) {
   return newOffset;
 }
 
-async function insertSnippets(
+function genSnippetCode(snippet: Snippet) {
+  const { tpl = "", slots = [] } = snippet;
+  let res = tpl.slice();
+
+  // merge slots that are replacing the same object
+  const objectSlots = slots.filter((slot) => isObject(slot.replacement));
+  const mergedObjectSlotsMap: Record<string, Slot> = {};
+  for (const os of objectSlots) {
+    const { name, replacement } = os;
+    if (mergedObjectSlotsMap[name]) {
+      const original = mergedObjectSlotsMap[name];
+      try {
+        mergedObjectSlotsMap[name] = {
+          ...original,
+          replacement: Array.isArray(original.replacement)
+            ? [...original.replacement, ...replacement]
+            : { ...original.replacement, ...replacement },
+        };
+      } catch {
+        vscode.window.showWarningMessage(
+          `Generating snippet: the type of slot (${name}) is wrong!`
+        );
+      }
+    }
+    mergedObjectSlotsMap[name] = mergedObjectSlotsMap[name] || os;
+  }
+  const mergedSlots: Slot[] = [
+    ...slots.filter((slot) => !slots.includes(slot)),
+    ...Object.values(mergedObjectSlotsMap),
+  ];
+  // replace the slots of tpl to the `replacement` or the result of `replacementFn`
+  for (const slot of mergedSlots) {
+    const { name, replacement, replacementFn } = slot;
+    const searchTag = `$(${name})`;
+    const replacementStr = valToCodeStr(replacement);
+    const valStr = replacementFn
+      ? replacementFn(name, replacementStr)
+      : replacementStr;
+    res = res.replace(searchTag, valStr);
+  }
+  return res;
+}
+
+async function insertSnippetCode(
   snippet: Snippet,
   start: vscode.Position | undefined,
   end: vscode.Position | undefined
@@ -38,10 +92,9 @@ async function insertSnippets(
   if (!start || !end) {
     return;
   }
-  const { tpl, variables, effectPatches = [], genSnippetFn } = snippet;
 
   // 1. insert snippet
-  const target = genSnippetFn(tpl, variables); // run the `genSnippetFn` to get the final snippet `target`
+  const target = genSnippetCode(snippet); // run the `genSnippetFn` to get the final snippet `target`
   await insertSnippet(start, end, target);
 
   // 2. record the target inserted position
@@ -53,14 +106,20 @@ async function insertSnippets(
   const effectCodeRanges: CodeRange[] = [];
   const codeRangeAdder = (cr: CodeRange) => effectCodeRanges.push(cr);
   let codeStr = getCurrentFileText();
-  await insertEffectPatches(codeStr, effectPatches || [], codeRangeAdder);
-  
+  await insertEffectPatches(codeStr, snippet.effects || [], codeRangeAdder);
+
   // 4. correct the target inserted position by `effectCodeRanges`
-  const newTargetOffset = correctOffsetByCodeRanges(targetOffset, effectCodeRanges);
+  const newTargetOffset = correctOffsetByCodeRanges(
+    targetOffset,
+    effectCodeRanges
+  );
 
   // 5. change current cursor to new inserted position and focus on it
   codeStr = getCurrentFileText();
-  const [line, character] = getLineAndCharacterNumFromOffset(codeStr, newTargetOffset);
+  const [line, character] = getLineAndCharacterNumFromOffset(
+    codeStr,
+    newTargetOffset
+  );
   const cur = new vscode.Position(line, character);
   const editor = vscode.window.activeTextEditor || {};
   (editor as any).selection = new vscode.Selection(cur, cur); // change the cursor
@@ -69,46 +128,44 @@ async function insertSnippets(
   return [target];
 }
 
-export function registerSnippetProviderAndCommands(
+export async function registerSnippetProviderAndCommands(
   context: vscode.ExtensionContext
 ) {
+  // get metas from user `.sni-ppet` folder
+  const metas: Meta[] = await readMetasFromConfig();
+
   // this command will execute insertSnippet operation
   vscode.commands.registerCommand(
     "insertSnippet",
     ({ snippet, startPosition }: IntellisenseCommandArguments) => {
       const endPosition = getActivePosition();
-      insertSnippets(snippet, startPosition, endPosition);
+      insertSnippetCode(snippet, startPosition, endPosition);
     }
   );
 
   // this command will create a options-intellisense
   vscode.commands.registerCommand(
     "showQuickPick",
-    async ({ options = [], snippet, startPosition }: IntellisenseCommandArguments) => {
+    async ({
+      options = [],
+      snippet,
+      startPosition,
+    }: IntellisenseCommandArguments) => {
       const optionsRes =
-        (await vscode.window.showQuickPick(options, {
+        (await vscode.window.showQuickPick(options as vscode.QuickPickItem[], {
           canPickMany: true,
         })) || [];
       // update variables by options picked items
-      for (const option of optionsRes) {
-        const { label = "", picked } = option;
-        if (picked) {
-          // label is a chain connect with '.', access the item step by step
-          let obj = snippet.variables || {};
-          const keys = label.split(".");
-          keys.forEach((key, index) => {
-            if (index === keys.length - 1) {
-              // last key, access the item
-              obj[key] = (option as any).value;
-            } else {
-              obj[key] = obj[key] || {};
-              obj = obj[key];
-            }
-          });
-        }
-      }
+      const selectedLabels = optionsRes.map((ele) => ele.label);
+      const selectedSlots = options
+        .filter((ele) => selectedLabels.includes(ele.label))
+        .map((ele) => ele.value);
+      const newSnippet: Snippet = {
+        ...snippet,
+        slots: [...snippet.slots, ...selectedSlots],
+      };
       const endPosition = getActivePosition();
-      insertSnippets(snippet, startPosition, endPosition);
+      insertSnippetCode(newSnippet, startPosition, endPosition);
     }
   );
 
@@ -123,7 +180,7 @@ export function registerSnippetProviderAndCommands(
         const range = new vscode.Range(start, end ?? start);
         const text = document.getText(range);
 
-        return getCompletionItemsByContextText(text);
+        return getCompletionItemsByContextText(text, metas);
       },
     },
     "."

@@ -2,7 +2,11 @@ import * as vscode from "vscode";
 import { getLineAndCharacterNumFromOffset } from "./utils";
 
 export function getCurrentFileText() {
-  return vscode.window.activeTextEditor?.document.getText() || "";
+  return vscode.window.activeTextEditor?.document.getText() ?? "";
+}
+
+export function getCurrentProjectPath() {
+  return vscode.workspace.workspaceFolders?.[0].uri.path ?? "";
 }
 
 export function getCurOffsetByPosition(pos: vscode.Position) {
@@ -18,7 +22,7 @@ export async function insertSnippet(
   text: string
 ) {
   return await vscode.window.activeTextEditor?.insertSnippet(
-    new vscode.SnippetString(text || ""),
+    new vscode.SnippetString(text ?? ""),
     new vscode.Range(start, end)
   );
 }

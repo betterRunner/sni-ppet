@@ -1,24 +1,20 @@
 import {
   Command,
-  QuickPickItem,
   CompletionItemKind,
   CompletionItem,
   Position,
 } from "vscode";
-import { SnippetMeta, MetaOption } from "../types/meta";
 import { IntellisenseCommandArguments } from "../types/intellisense";
-import { Snippet } from "../types/snippet";
-import { GenSnippetFn, Patch } from "../types/common";
-import { fillMetaVariables } from "../utils/meta";
+import { Meta, Patch, Slot, OptionalSlot } from "../types/meta";
+import { Snippet, SnippetOption } from "../types/snippet";
 
 function genCommandOptions(
-  options: Record<string, MetaOption>
-): QuickPickItem[] {
-  const keys = Object.keys(options);
-  return keys.map((key) => ({
-    label: key,
-    picked: options[key]?.picked,
-    value: options[key]?.value,
+  options: OptionalSlot[]
+): SnippetOption[] {
+  return options.map((option) => ({
+    label: option.name,
+    picked: option.picked,
+    value: option,
   }));
 }
 
@@ -26,9 +22,7 @@ export function genCompletionItem(
   label: string,
   startPosition: Position | undefined,
   snippet?: Snippet,
-  options?: Record<string, MetaOption> | undefined,
-  detail: string = "",
-  documentation: string = ""
+  options?: OptionalSlot[],
 ): CompletionItem {
   // (1) if `snippet` is null, does not create `command`
   // (2) if `snippet` is not null and `options` is null, create `insertSnippet` command
@@ -49,8 +43,6 @@ export function genCompletionItem(
 
   return {
     label,
-    detail,
-    documentation,
     command,
     preselect: true,
     kind: CompletionItemKind.Value,
@@ -58,36 +50,30 @@ export function genCompletionItem(
 }
 
 export function genCompletionItemsByMeta(
-  meta: SnippetMeta,
+  meta: Meta,
   startPosition: Position | undefined,
-  genSnippetFn: GenSnippetFn,
   generalEffects: Patch[]
 ): CompletionItem[] {
-  const { tpl, commonValues, itemsMap = {}, effects: metaEffects = [] } = meta;
-  const keys = Object.keys(itemsMap);
-  return keys.map((key) => {
+  const { tpl, commonSlots, items = [], effects: metaEffects = [] } = meta;
+  return items.map((item) => {
     const {
-      detail,
-      documentation,
-      variables,
-      options,
+      name = '',
+      slots = [],
+      optionalSlots = [],
       effects = [],
-    } = itemsMap[key];
+    } = item;
     // snippet
     const snippet: Snippet = {
       tpl: tpl,
-      variables: fillMetaVariables(commonValues, variables),
-      genSnippetFn,
-      effectPatches: [...generalEffects, ...metaEffects, ...effects],
+      slots: [...commonSlots, ...slots],
+      effects: [...generalEffects, ...metaEffects, ...effects],
     };
 
     return genCompletionItem(
-      key,
+      name,
       startPosition,
       snippet,
-      options,
-      detail,
-      documentation
+      optionalSlots,
     );
   });
 }

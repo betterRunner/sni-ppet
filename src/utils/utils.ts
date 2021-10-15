@@ -9,6 +9,10 @@ export function upperFirstLetter(str: string) {
   return `${str.slice(0, 1).toUpperCase()}${str.slice(1)}`;
 }
 
+export function isObject(val: any) {
+  return typeof val === "object" && val;
+}
+
 export function isFunction(fn: any) {
   return fn && {}.toString.call(fn) === "[object Function]";
 }
@@ -17,7 +21,7 @@ export function valToCodeStr(val: any) {
   let valStr = "";
   if (isFunction(val)) {
     valStr = val.toString();
-  } else if (Array.isArray(val) || (typeof val === "object" && val)) {
+  } else if (Array.isArray(val) || isObject(val)) {
     const isArray = Array.isArray(val);
     const slot = isArray ? "[\n$0\n]" : "{\n$0\n}";
     const iters = isArray ? val : Object.keys(val);
