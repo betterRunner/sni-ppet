@@ -45,7 +45,7 @@ function genSnippetCode(snippet: Snippet) {
   const { tpl = "", slots = [] } = snippet;
   let res = tpl.slice();
 
-  // merge slots that are replacing the same object
+  // merge slots that replace the same object
   const objectSlots = slots.filter((slot) => isObject(slot.replacement));
   const mergedObjectSlotsMap: Record<string, Slot> = {};
   for (const os of objectSlots) {
@@ -68,9 +68,10 @@ function genSnippetCode(snippet: Snippet) {
     mergedObjectSlotsMap[name] = mergedObjectSlotsMap[name] || os;
   }
   const mergedSlots: Slot[] = [
-    ...slots.filter((slot) => !slots.includes(slot)),
+    ...slots.filter((slot) => !objectSlots.includes(slot)),
     ...Object.values(mergedObjectSlotsMap),
   ];
+
   // replace the slots of tpl to the `replacement` or the result of `replacementFn`
   for (const slot of mergedSlots) {
     const { name, replacement, replacementFn } = slot;
@@ -94,7 +95,7 @@ async function insertSnippetCode(
   }
 
   // 1. insert snippet
-  const target = genSnippetCode(snippet); // run the `genSnippetFn` to get the final snippet `target`
+  const target = genSnippetCode(snippet);
   await insertSnippet(start, end, target);
 
   // 2. record the target inserted position
