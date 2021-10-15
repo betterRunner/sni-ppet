@@ -30,10 +30,10 @@ export function genCompletionItem(
   const command: Command | undefined = snippet
     ? {
         title: "options",
-        command: options ? "showQuickPick" : "insertSnippet",
+        command: options?.length ? "showQuickPick" : "insertSnippet",
         arguments: [
           {
-            options: options && genCommandOptions(options),
+            options: options?.length && genCommandOptions(options),
             snippet,
             startPosition
           } as IntellisenseCommandArguments,
@@ -59,8 +59,8 @@ export function genCompletionItemsByMeta(
     const {
       name = '',
       slots = [],
-      optionalSlots = [],
       effects = [],
+      optionalSlots,
     } = item;
     // snippet
     const snippet: Snippet = {
