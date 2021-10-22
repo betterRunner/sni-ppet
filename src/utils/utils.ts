@@ -38,7 +38,8 @@ export function valToCodeStr(val: any) {
   } else if (typeof val === "string") {
     valStr = `'${val}'`;
   } else {
-    valStr = val.toString();
+    valStr =
+      val === undefined ? "undefined" : val === null ? "null" : val.toString();
   }
   return valStr;
 }
