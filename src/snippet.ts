@@ -78,7 +78,7 @@ function genSnippetCode(snippet: Snippet) {
     const searchTag = `$(${name})`;
     const replacementStr = valToCodeStr(replacement);
     const valStr = replacementFn
-      ? replacementFn(name, replacementStr)
+      ? replacementFn({ slotName: name, replacementStr })
       : replacementStr;
     res = res.replace(searchTag, valStr);
   }
