@@ -1,2 +1,2 @@
-export * from "../metas/template/metas/types/meta";
-export * from "../metas/template/metas/types/patch";
+export * from "../metas/template/types/meta";
+export * from "../metas/template/types/patch";

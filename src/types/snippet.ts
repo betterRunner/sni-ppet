@@ -1,5 +1,5 @@
 import { QuickPickItem } from "vscode";
-import { MetaItem } from "../metas/template/metas/types/meta";
+import { MetaItem } from "../metas/template/types/meta";
 
 export interface Snippet extends Omit<MetaItem, "name" | "optionSlots"> {
   tpl: string;
