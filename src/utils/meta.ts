@@ -1,4 +1,7 @@
-import { DYNAMIC_TAGS } from "./constant";
+export const DYNAMIC_TAGS = {
+    unset: 'unset',
+    random: 'random',
+}
 
 export function fillMetaVariables(
   variables: Record<string, any>,

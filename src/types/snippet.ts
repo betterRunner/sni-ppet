@@ -1,8 +1,10 @@
-import { GenSnippetFn, Patch } from "./common";
+import { QuickPickItem } from "vscode";
+import { MetaItem } from "../metas/template/metas/types/meta";
 
-export interface Snippet {
+export interface Snippet extends Omit<MetaItem, "name" | "optionSlots"> {
   tpl: string;
-  variables: { [key: string]: any };
-  genSnippetFn: GenSnippetFn;  // genSnippetFn(tpl, variables) -> snippet
-  effectPatches?: Patch[];
+}
+
+export interface SnippetOption extends QuickPickItem {
+  value: any;
 }

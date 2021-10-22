@@ -1,0 +1,3 @@
+[submodule "src/metas/template"]
+	path = src/metas/template
+	url = https://github.com/betterRunner/sni-ppet-meta-template.git
