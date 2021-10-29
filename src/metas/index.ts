@@ -10,6 +10,8 @@ const CONFIG_FOLDER_NAME = ".sni-ppet";
 const META_TEMPLATE_REPO_URL =
   "https://github.com/betterRunner/sni-ppet-meta-template.git";
 const META_FOLDER_METAS = "metas";
+const META_FOLDER_TYPES = "types";
+const META_FOLDER_CONSTANTS = "constants.ts";
 const META_FOLDER_CONFIG = "config.env";
 
 function cloneMetaTemplatesFromRepo(overwrite: boolean = false): Promise<void> {
@@ -18,7 +20,9 @@ function cloneMetaTemplatesFromRepo(overwrite: boolean = false): Promise<void> {
     if (curProjectPath) {
       const configPath = resolve(curProjectPath, CONFIG_FOLDER_NAME);
       const tempPath = resolve(configPath, ".temp");
-      const configMetaUri = vscode.Uri.file(resolve(configPath, META_FOLDER_METAS));
+      const configMetaUri = vscode.Uri.file(
+        resolve(configPath, META_FOLDER_METAS)
+      );
 
       // 1. overwrite needs deleting `configMetaUri` first
       if (overwrite) {
@@ -44,16 +48,33 @@ function cloneMetaTemplatesFromRepo(overwrite: boolean = false): Promise<void> {
             reject(err);
             return;
           }
-          // 4. copy the `metas` folder from `tempPath` to `configMetaPath`
-          const tempMetaUri = vscode.Uri.file(resolve(tempPath, META_FOLDER_METAS));
+          // 4. copy the files from `tempPath` to `configMetaPath`:
+          // (1) only copy `demo` folder of `metas`
+          // (2) copy `types` fodler
+          // (3) copy `constants.ts`
+          // (4) copy `config.env`
+          const DEMO_FOLDER_NAME = 'demo';
+          const tempMetaDemoUri = vscode.Uri.file(
+            resolve(tempPath, META_FOLDER_METAS, DEMO_FOLDER_NAME)
+          );
+          const configMetaDemoUri = vscode.Uri.file(
+            resolve(configPath, META_FOLDER_METAS, DEMO_FOLDER_NAME)
+          );
           await vscode.workspace.fs.createDirectory(configMetaUri);
-          await vscode.workspace.fs.copy(tempMetaUri, configMetaUri, {
+          await vscode.workspace.fs.createDirectory(configMetaDemoUri);
+          await vscode.workspace.fs.copy(tempMetaDemoUri, configMetaDemoUri, {
             overwrite: true,
           });
-          await vscode.workspace.fs.copy(
-            vscode.Uri.file(resolve(tempPath, META_FOLDER_CONFIG)),
-            vscode.Uri.file(resolve(configPath, META_FOLDER_CONFIG)),
-          );
+          for (const name of [
+            META_FOLDER_TYPES,
+            META_FOLDER_CONSTANTS,
+            META_FOLDER_CONFIG,
+          ]) {
+            await vscode.workspace.fs.copy(
+              vscode.Uri.file(resolve(tempPath, name)),
+              vscode.Uri.file(resolve(configPath, name))
+            );
+          }
           // 5. delete the `tempPath`
           vscode.workspace.fs.delete(vscode.Uri.file(tempPath), {
             recursive: true,
