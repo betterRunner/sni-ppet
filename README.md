@@ -18,6 +18,9 @@ https://user-images.githubusercontent.com/7123136/138384172-298fd229-c5cf-4b85-8
 - 🏷️ Progressive intellisense: provide the progressive completion items to get the final code.
 - ⌨️ Detail options: provide a multiple select to add or remove details to the final code.
 
+## templates
+the demo template repo: https://github.com/betterRunner/sni-ppet-meta-template
+
 ## Licence
 
 Sni-ppet is open source software licensed as
