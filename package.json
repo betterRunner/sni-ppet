@@ -1,18 +1,21 @@
 {
   "name": "sni-ppet",
   "displayName": "sni-ppet",
-  "publisher": "liukaizhan",
+  "publisher": "Jim-Chan",
   "description": "A progressive intellisense to provide progressive customized snippet code.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "engines": {
     "vscode": "^1.59.0"
   },
+  "icon": "logo.png",
+  "keywords": ["snippet", "code generating", "intellisense", "productivity", "vscode extension"],
   "categories": [
-    "Other"
+    "Snippets"
   ],
   "activationEvents": [
     "onStartupFinished"
   ],
+  "license": "MIT",
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
