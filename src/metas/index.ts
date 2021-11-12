@@ -123,7 +123,11 @@ export async function readMetasFromConfig(): Promise<Meta[]> {
   const res: Meta[] = [];
 
   // if meta folder doesn't exist, clone the template code from github repo
-  await cloneMetaTemplatesFromRepo();
+  try {
+    await cloneMetaTemplatesFromRepo();
+  } catch(err) {
+    outputChannel.error(`Error occurs while cloning meta templates: ${err}`);
+  }
 
   const curProjectPath = getCurrentProjectPath();
   if (curProjectPath) {
