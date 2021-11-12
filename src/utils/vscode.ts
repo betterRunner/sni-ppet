@@ -68,3 +68,15 @@ export function getPositionByOffset(lineOffset: number, charOffset: number) {
     );
   }
 }
+
+const channel = vscode.window.createOutputChannel('sni-ppet');
+export const outputChannel = {
+  info: (message: string) => {
+    console.log(message);
+    channel.appendLine(`[INFO] ${message}`);
+  },
+  error: (message: string) => {
+    console.error(message);
+    channel.appendLine(`[ERROR]: ${message}`);
+  },
+};
