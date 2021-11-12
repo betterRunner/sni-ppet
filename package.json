@@ -33,7 +33,8 @@
     "test": "node ./out/test/runTest.js",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:serve": "vitepress serve docs"
+    "docs:serve": "vitepress serve docs",
+    "ci-docs": "run-s docs:build"
   },
   "repository": {
     "type": "git",
