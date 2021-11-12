@@ -11,7 +11,6 @@
 
 https://user-images.githubusercontent.com/7123136/138384172-298fd229-c5cf-4b85-8f22-da728d938638.mov
 
-
 ## Features
 
 - ✏️ DIY snippet: write your own snippet in ts.

@@ -135,57 +135,64 @@ export async function registerSnippetProviderAndCommands(
   // get metas from user `.sni-ppet` folder
   const metas: Meta[] = await readMetasFromConfig();
 
-  // this command will execute insertSnippet operation
-  vscode.commands.registerCommand(
-    "insertSnippet",
-    ({ snippet, startPosition }: IntellisenseCommandArguments) => {
-      const endPosition = getActivePosition();
-      insertSnippetCode(snippet, startPosition, endPosition);
-    }
-  );
+  const commands = [
+    // this command will execute insertSnippet operation
+    vscode.commands.registerCommand(
+      "insertSnippet",
+      ({ snippet, startPosition }: IntellisenseCommandArguments) => {
+        const endPosition = getActivePosition();
+        insertSnippetCode(snippet, startPosition, endPosition);
+      }
+    ),
 
-  // this command will create a options-intellisense
-  vscode.commands.registerCommand(
-    "showQuickPick",
-    async ({
-      options = [],
-      snippet,
-      startPosition,
-    }: IntellisenseCommandArguments) => {
-      const optionsRes =
-        (await vscode.window.showQuickPick(options as vscode.QuickPickItem[], {
-          canPickMany: true,
-        })) || [];
-      // update variables by options picked items
-      const selectedLabels = optionsRes.map((ele) => ele.label);
-      const selectedSlots = options
-        .filter((ele) => selectedLabels.includes(ele.label))
-        .map((ele) => ele.value);
-      const newSnippet: Snippet = {
-        ...snippet,
-        slots: [...snippet.slots, ...selectedSlots],
-      };
-      const endPosition = getActivePosition();
-      insertSnippetCode(newSnippet, startPosition, endPosition);
-    }
-  );
+    // this command will create a options-intellisense
+    vscode.commands.registerCommand(
+      "showQuickPick",
+      async ({
+        options = [],
+        snippet,
+        startPosition,
+      }: IntellisenseCommandArguments) => {
+        const optionsRes =
+          (await vscode.window.showQuickPick(
+            options as vscode.QuickPickItem[],
+            {
+              canPickMany: true,
+            }
+          )) || [];
+        // update variables by options picked items
+        const selectedLabels = optionsRes.map((ele) => ele.label);
+        const selectedSlots = options
+          .filter((ele) => selectedLabels.includes(ele.label))
+          .map((ele) => ele.value);
+        const newSnippet: Snippet = {
+          ...snippet,
+          slots: [...snippet.slots, ...selectedSlots],
+        };
+        const endPosition = getActivePosition();
+        insertSnippetCode(newSnippet, startPosition, endPosition);
+      }
+    ),
 
-  // this provider will create a search-intellisense
-  const completionProvider = vscode.languages.registerCompletionItemProvider(
-    ["javascript", "typescript", "javascriptreact", "typescriptreact"],
-    {
-      provideCompletionItems(document) {
-        // get the text from beginning to current cursor
-        const start = new vscode.Position(0, 0);
-        const end = vscode.window.activeTextEditor?.selection.active;
-        const range = new vscode.Range(start, end ?? start);
-        const text = document.getText(range);
+    // this provider will create a search-intellisense
+    vscode.languages.registerCompletionItemProvider(
+      ["javascript", "typescript", "javascriptreact", "typescriptreact"],
+      {
+        provideCompletionItems(document) {
+          // get the text from beginning to current cursor
+          const start = new vscode.Position(0, 0);
+          const end = vscode.window.activeTextEditor?.selection.active;
+          const range = new vscode.Range(start, end ?? start);
+          const text = document.getText(range);
 
-        return getCompletionItemsByContextText(text, metas);
+          return getCompletionItemsByContextText(text, metas);
+        },
       },
-    },
-    "."
-  );
+      "."
+    ),
+  ];
 
-  context.subscriptions.push(completionProvider);
+  commands.forEach((disposable) => {
+    context.subscriptions.push(disposable);
+  });
 }

@@ -3,7 +3,7 @@ import { resolve } from "path";
 import { ScriptTarget, ModuleKind } from "typescript";
 
 import { compile } from "../utils/ts";
-import { getCurrentProjectPath } from "../utils/vscode";
+import { getCurrentProjectPath, outputChannel } from "../utils/vscode";
 import { Meta } from "../types/meta";
 
 const CONFIG_FOLDER_NAME = ".sni-ppet";
@@ -115,8 +115,8 @@ export async function readMetasFromConfig(): Promise<Meta[]> {
   const curProjectPath = getCurrentProjectPath();
   if (curProjectPath) {
     const rootPath = resolve(curProjectPath, CONFIG_FOLDER_NAME);
-    const metaPath = resolve(rootPath, "metas");
-    const metasUri = vscode.Uri.file(metaPath);
+    const metasPath = resolve(rootPath, "metas");
+    const metasUri = vscode.Uri.file(metasPath);
     const metas = (await vscode.workspace.fs.readDirectory(metasUri))
       .filter(
         (f) => f?.[1] === vscode.FileType.Directory && !f?.[0].startsWith(".")
@@ -124,22 +124,25 @@ export async function readMetasFromConfig(): Promise<Meta[]> {
       .map((f) => f?.[0]);
     for (const meta of metas) {
       // compile the metas ts code to CommonJS js code then we can use `import()` to dynamically import them
-      const indexPath = resolve(metaPath, meta, "index.ts");
+      const indexPath = resolve(metasPath, meta, "index.ts");
       const compileSucc = compile([indexPath], {
-        noEmitOnError: true,
-        noImplicitAny: true,
         target: ScriptTarget.ESNext,
         module: ModuleKind.CommonJS,
       });
       if (compileSucc) {
-        const metaPath = resolve(indexPath, "..", "index.js");
-        const meta = (await import(metaPath))?.default; // dynamically import
-        res.push(...meta);
+        try {
+          const metaPath = resolve(indexPath, "..", "index.js");
+          const metaData = (await import(metaPath))?.default; // dynamically import
+          res.push(...metaData);
+        } catch(err) {
+          outputChannel.error((err as string) ?? '');
+        }
+      } else {
+        outputChannel.error(`compile ts file error: ${indexPath}`);
       }
     }
     // delete the compiled CommonJS js code
     removeCompiledJsFiles(rootPath);
   }
-  console.log(res);
   return res;
 }
