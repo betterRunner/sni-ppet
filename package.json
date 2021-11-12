@@ -13,15 +13,15 @@
     "Snippets"
   ],
   "activationEvents": [
-    "onStartupFinished"
+    "onCommand:Sni-ppet.initialize"
   ],
   "license": "MIT",
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "sni-ppet.init",
-        "title": "Sni-ppet"
+        "command": "Sni-ppet.initialize",
+        "title": "Sni-ppet.initialize"
       }
     ]
   },
