@@ -28,6 +28,7 @@ function cloneMetaTemplatesFromRepo(overwrite: boolean = false): Promise<void> {
       if (overwrite) {
         await vscode.workspace.fs.delete(configMetaUri);
       }
+
       // 2. if `metas` folder exists, just skip this function
       try {
         const stat = await vscode.workspace.fs.stat(configMetaUri);
@@ -75,11 +76,23 @@ function cloneMetaTemplatesFromRepo(overwrite: boolean = false): Promise<void> {
               vscode.Uri.file(resolve(configPath, name))
             );
           }
+
           // 5. delete the `tempPath`
           vscode.workspace.fs.delete(vscode.Uri.file(tempPath), {
             recursive: true,
             useTrash: false,
           });
+
+          // 6. add `CONFIG_FOLDER_NAME` to .gitignore if has.
+          const gitignoreUri = vscode.Uri.file(resolve(curProjectPath, '.gitignore'));
+          if ((await vscode.workspace.fs.stat(gitignoreUri))?.type === vscode.FileType.File) {
+            let content = (await vscode.workspace.fs.readFile(gitignoreUri)).toString();
+            if (!content.includes(CONFIG_FOLDER_NAME)) {
+              content = `${content}\n${CONFIG_FOLDER_NAME}`;
+              await vscode.workspace.fs.writeFile(gitignoreUri, Buffer.from(content, 'utf-8'));
+            }
+          }
+
           succ();
         }
       );
