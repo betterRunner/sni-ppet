@@ -5,9 +5,10 @@ import {
   getActivePosition,
   getCurrentFileText,
   getCurOffsetByPosition,
+  outputChannel,
 } from "./utils/vscode";
 import { getCompletionItemsByContextText } from "./intellisense";
-import { readMetasFromConfig } from "./metas";
+import { cloneMetaTemplatesFromRepo, readMetasFromConfig } from "./metas";
 import { IntellisenseCommandArguments } from "./types/intellisense";
 import { Meta, Slot } from "./types/meta";
 import { Snippet } from "./types/snippet";
@@ -129,12 +130,29 @@ async function insertSnippetCode(
   return [target];
 }
 
-export async function registerSnippetProviderAndCommands(
-  context: vscode.ExtensionContext
-) {
-  // get metas from user `.sni-ppet` folder
+async function registerCompletionItemProviderByMetas() {
   const metas: Meta[] = await readMetasFromConfig();
+  if (metas.length) {
+    return vscode.languages.registerCompletionItemProvider(
+      ["javascript", "typescript", "javascriptreact", "typescriptreact"],
+      {
+        provideCompletionItems(document) {
+          // get the text from beginning to current cursor
+          const start = new vscode.Position(0, 0);
+          const end = vscode.window.activeTextEditor?.selection.active;
+          const range = new vscode.Range(start, end ?? start);
+          const text = document.getText(range);
 
+          return getCompletionItemsByContextText(text, metas);
+        },
+      },
+      "."
+    );
+  }
+  return null;
+}
+
+async function run(context: vscode.ExtensionContext) {
   const commands = [
     // this command will execute insertSnippet operation
     vscode.commands.registerCommand(
@@ -173,26 +191,37 @@ export async function registerSnippetProviderAndCommands(
         insertSnippetCode(newSnippet, startPosition, endPosition);
       }
     ),
-
-    // this provider will create a search-intellisense
-    vscode.languages.registerCompletionItemProvider(
-      ["javascript", "typescript", "javascriptreact", "typescriptreact"],
-      {
-        provideCompletionItems(document) {
-          // get the text from beginning to current cursor
-          const start = new vscode.Position(0, 0);
-          const end = vscode.window.activeTextEditor?.selection.active;
-          const range = new vscode.Range(start, end ?? start);
-          const text = document.getText(range);
-
-          return getCompletionItemsByContextText(text, metas);
-        },
-      },
-      "."
-    ),
   ];
+
+  // this provider will create a search-intellisense
+  const disposable = registerCompletionItemProviderByMetas();
+  disposable ?? commands.push(disposable);
 
   commands.forEach((disposable) => {
     context.subscriptions.push(disposable);
   });
+}
+
+export async function registerSnippetProviderAndCommands(
+  context: vscode.ExtensionContext
+) {
+  const disposable = vscode.commands.registerCommand(
+    "Sni-ppet.initialize",
+    async () => {
+      try {
+        const cloneSucc = await cloneMetaTemplatesFromRepo();
+        if (cloneSucc) {
+          const disposable = registerCompletionItemProviderByMetas();
+          disposable ?? context.subscriptions.push(disposable); 
+        }
+      } catch (err) {
+        outputChannel.error(
+          `error occurs while cloning metas template: ${err}`
+        );
+      }
+    }
+  );
+  context.subscriptions.push(disposable);
+
+  run(context);
 }

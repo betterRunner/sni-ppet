@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import * as fs from "fs";
 import { resolve } from "path";
 import { ScriptTarget, ModuleKind } from "typescript";
 
@@ -14,7 +15,7 @@ const META_FOLDER_TYPES = "types";
 const META_FOLDER_CONSTANTS = "constants.ts";
 const META_FOLDER_CONFIG = "config.env";
 
-function cloneMetaTemplatesFromRepo(overwrite: boolean = false): Promise<void> {
+export function cloneMetaTemplatesFromRepo(overwrite: boolean = false): Promise<boolean> {
   return new Promise(async (succ, reject) => {
     const curProjectPath = getCurrentProjectPath();
     if (curProjectPath) {
@@ -33,7 +34,7 @@ function cloneMetaTemplatesFromRepo(overwrite: boolean = false): Promise<void> {
       try {
         const stat = await vscode.workspace.fs.stat(configMetaUri);
         if (stat?.type === vscode.FileType.Directory) {
-          succ();
+          succ(false);
           return;
         }
       } catch (e) {
@@ -93,7 +94,7 @@ function cloneMetaTemplatesFromRepo(overwrite: boolean = false): Promise<void> {
             }
           }
 
-          succ();
+          succ(true);
         }
       );
     } else {
@@ -122,18 +123,17 @@ async function removeCompiledJsFiles(rootPath: string) {
 export async function readMetasFromConfig(): Promise<Meta[]> {
   const res: Meta[] = [];
 
-  // if meta folder doesn't exist, clone the template code from github repo
-  try {
-    await cloneMetaTemplatesFromRepo();
-  } catch(err) {
-    outputChannel.error(`Error occurs while cloning meta templates: ${err}`);
-  }
-
   const curProjectPath = getCurrentProjectPath();
   if (curProjectPath) {
     const rootPath = resolve(curProjectPath, CONFIG_FOLDER_NAME);
     const metasPath = resolve(rootPath, "metas");
     const metasUri = vscode.Uri.file(metasPath);
+    
+    if (!fs.existsSync(metasPath)) {
+      // the metas folder does not exist, which means the user didn't call `Sni-ppet.initialize command yet.`
+      return [];
+    }
+
     const metas = (await vscode.workspace.fs.readDirectory(metasUri))
       .filter(
         (f) => f?.[1] === vscode.FileType.Directory && !f?.[0].startsWith(".")
