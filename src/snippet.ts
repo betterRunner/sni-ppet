@@ -75,13 +75,13 @@ function genSnippetCode(snippet: Snippet) {
 
   // replace the slots of tpl to the `replacement` or the result of `replacementFn`
   for (const slot of mergedSlots) {
-    const { name, replacement, replacementFn } = slot;
+    const { name, replacement, replacementFn, raw } = slot;
     const searchTag = `$(${name})`;
-    const replacementStr = valToCodeStr(replacement);
+    const replacementStr = valToCodeStr(replacement, raw);
     const valStr = replacementFn
       ? replacementFn({ slotName: name, replacementStr })
       : replacementStr;
-    res = res.replace(searchTag, valStr);
+    res = res.replaceAll(searchTag, valStr);
   }
   return res;
 }
