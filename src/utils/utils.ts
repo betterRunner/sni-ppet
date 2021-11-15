@@ -17,7 +17,7 @@ export function isFunction(fn: any) {
   return fn && {}.toString.call(fn) === "[object Function]";
 }
 
-export function valToCodeStr(val: any) {
+export function valToCodeStr(val: any, raw: boolean = false) {
   let valStr = "";
   if (isFunction(val)) {
     valStr = val.toString();
@@ -36,7 +36,7 @@ export function valToCodeStr(val: any) {
         .join(",\n")
     );
   } else if (typeof val === "string") {
-    valStr = `'${val}'`;
+    valStr = raw ? val : `'${val}'`;
   } else {
     valStr =
       val === undefined ? "undefined" : val === null ? "null" : val.toString();

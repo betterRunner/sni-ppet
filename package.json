@@ -13,6 +13,7 @@
     "Snippets"
   ],
   "activationEvents": [
+    "onCommand:Sni-ppet.initialize",
     "onStartupFinished"
   ],
   "license": "MIT",
@@ -20,8 +21,12 @@
   "contributes": {
     "commands": [
       {
-        "command": "sni-ppet.init",
-        "title": "Sni-ppet"
+        "command": "Sni-ppet.initialize",
+        "title": "Sni-ppet.initialize"
+      },
+      {
+        "command": "Sni-ppet.run",
+        "title": "Sni-ppet.run"
       }
     ]
   },

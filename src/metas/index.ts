@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import * as fs from "fs";
 import { resolve } from "path";
 import { ScriptTarget, ModuleKind } from "typescript";
 
@@ -14,7 +15,7 @@ const META_FOLDER_TYPES = "types";
 const META_FOLDER_CONSTANTS = "constants.ts";
 const META_FOLDER_CONFIG = "config.env";
 
-function cloneMetaTemplatesFromRepo(overwrite: boolean = false): Promise<void> {
+export function cloneMetaTemplatesFromRepo(overwrite: boolean = false): Promise<boolean> {
   return new Promise(async (succ, reject) => {
     const curProjectPath = getCurrentProjectPath();
     if (curProjectPath) {
@@ -28,11 +29,12 @@ function cloneMetaTemplatesFromRepo(overwrite: boolean = false): Promise<void> {
       if (overwrite) {
         await vscode.workspace.fs.delete(configMetaUri);
       }
+
       // 2. if `metas` folder exists, just skip this function
       try {
         const stat = await vscode.workspace.fs.stat(configMetaUri);
         if (stat?.type === vscode.FileType.Directory) {
-          succ();
+          succ(false);
           return;
         }
       } catch (e) {
@@ -75,12 +77,24 @@ function cloneMetaTemplatesFromRepo(overwrite: boolean = false): Promise<void> {
               vscode.Uri.file(resolve(configPath, name))
             );
           }
+
           // 5. delete the `tempPath`
           vscode.workspace.fs.delete(vscode.Uri.file(tempPath), {
             recursive: true,
             useTrash: false,
           });
-          succ();
+
+          // 6. add `CONFIG_FOLDER_NAME` to .gitignore if has.
+          const gitignoreUri = vscode.Uri.file(resolve(curProjectPath, '.gitignore'));
+          if ((await vscode.workspace.fs.stat(gitignoreUri))?.type === vscode.FileType.File) {
+            let content = (await vscode.workspace.fs.readFile(gitignoreUri)).toString();
+            if (!content.includes(CONFIG_FOLDER_NAME)) {
+              content = `${content}\n${CONFIG_FOLDER_NAME}`;
+              await vscode.workspace.fs.writeFile(gitignoreUri, Buffer.from(content, 'utf-8'));
+            }
+          }
+
+          succ(true);
         }
       );
     } else {
@@ -109,14 +123,17 @@ async function removeCompiledJsFiles(rootPath: string) {
 export async function readMetasFromConfig(): Promise<Meta[]> {
   const res: Meta[] = [];
 
-  // if meta folder doesn't exist, clone the template code from github repo
-  await cloneMetaTemplatesFromRepo();
-
   const curProjectPath = getCurrentProjectPath();
   if (curProjectPath) {
     const rootPath = resolve(curProjectPath, CONFIG_FOLDER_NAME);
     const metasPath = resolve(rootPath, "metas");
     const metasUri = vscode.Uri.file(metasPath);
+    
+    if (!fs.existsSync(metasPath)) {
+      // the metas folder does not exist, which means the user didn't call `Sni-ppet.initialize command yet.`
+      return [];
+    }
+
     const metas = (await vscode.workspace.fs.readDirectory(metasUri))
       .filter(
         (f) => f?.[1] === vscode.FileType.Directory && !f?.[0].startsWith(".")
