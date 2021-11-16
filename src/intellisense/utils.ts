@@ -61,10 +61,12 @@ export function genCompletionItemsByMeta(
       slots = [],
       effects = [],
       optionalSlots,
+      tpl: itemTpl,
     } = item;
     // snippet
     const snippet: Snippet = {
-      tpl: tpl,
+      name,
+      tpl: itemTpl ?? tpl, // use item's own `tpl` if it has otherwise use meta's `tpl`
       slots: [...commonSlots, ...slots],
       effects: [...generalEffects, ...metaEffects, ...effects],
     };

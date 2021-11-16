@@ -23,7 +23,7 @@ export function valToCodeStr(val: any, raw: boolean = false) {
     valStr = val.toString();
   } else if (Array.isArray(val) || isObject(val)) {
     const isArray = Array.isArray(val);
-    const slot = isArray ? "[\n$0\n]" : "{\n$0\n}";
+    const slot = isArray ? "[$0]" : "{$0}";
     const iters = isArray ? val : Object.keys(val);
     valStr = slot.replace(
       "$0",

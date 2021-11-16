@@ -9,8 +9,9 @@ import {
 } from "./utils/vscode";
 import { getCompletionItemsByContextText } from "./intellisense";
 import { cloneMetaTemplatesFromRepo, readMetasFromConfig } from "./metas";
+import { handleSpecialVal } from './metas/handler';
 import { IntellisenseCommandArguments } from "./types/intellisense";
-import { Meta, Slot } from "./types/meta";
+import { Meta, Slot, MetaItem } from "./types/meta";
 import { Snippet } from "./types/snippet";
 import { CodeRange } from "./types/common";
 import { insertEffectPatches } from "./utils/effects";
@@ -77,9 +78,10 @@ function genSnippetCode(snippet: Snippet) {
   for (const slot of mergedSlots) {
     const { name, replacement, replacementFn, raw } = slot;
     const searchTag = `$(${name})`;
-    const replacementStr = valToCodeStr(replacement, raw);
+    const handledReplacement = handleSpecialVal(replacement) as string;
+    const replacementStr = valToCodeStr(handledReplacement, raw);
     const valStr = replacementFn
-      ? replacementFn({ slotName: name, replacementStr })
+      ? replacementFn({ slotName: name, replacementStr, item: snippet as MetaItem })
       : replacementStr;
     res = res.replaceAll(searchTag, valStr);
   }
