@@ -29,6 +29,7 @@ export async function getCompletionItemsByContextText(
       // non-progressive meta needs to give the snippet parameter to `genCompletionItem` thus generating the snippet directly
       const snippet = !isProgressive
         ? ({
+            name: "non-progressive",
             tpl: tpl || "",
             slots: [],
             effects,
