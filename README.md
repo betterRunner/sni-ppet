@@ -9,6 +9,7 @@
 <p align="center">A snippet vscode extension: design your own snippets and access them progressively.
 </p>
 
+https://user-images.githubusercontent.com/7123136/151733116-f8f13a74-4703-4356-903f-5c4b1d6c691f.mp4
 
 ## Features
 
