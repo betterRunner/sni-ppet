@@ -17,7 +17,11 @@ https://user-images.githubusercontent.com/7123136/151733116-f8f13a74-4703-4356-9
 - 🏷️ Progressive intellisense: provide the progressive completion items to get the final code.
 - ⌨️ Detail options: provide a multiple select to add or remove details to the final code.
 
-## templates
+## Download
+
+https://marketplace.visualstudio.com/items?itemName=goodbetterbest.sni-ppet
+
+## Templates
 the demo template repo: https://github.com/betterRunner/sni-ppet-meta-template
 
 ## Licence
