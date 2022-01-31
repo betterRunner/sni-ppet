@@ -1,9 +1,9 @@
 {
   "name": "sni-ppet",
   "displayName": "sni-ppet",
-  "publisher": "Jim-Chan",
+  "publisher": "sni-ppet",
   "description": "A progressive intellisense to provide progressive customized snippet code.",
-  "version": "0.0.3",
+  "version": "1.0.0",
   "engines": {
     "vscode": "^1.59.0"
   },
