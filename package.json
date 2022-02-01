@@ -1,9 +1,9 @@
 {
   "name": "sni-ppet",
   "displayName": "sni-ppet",
-  "publisher": "Jim-Chan",
+  "publisher": "goodbetterbest",
   "description": "A progressive intellisense to provide progressive customized snippet code.",
-  "version": "0.0.3",
+  "version": "1.0.0",
   "engines": {
     "vscode": "^1.59.0"
   },
@@ -43,7 +43,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/betterRunner/sni-ppet-private"
+    "url": "git+https://github.com/betterRunner/sni-ppet"
   },
   "devDependencies": {
     "@types/glob": "^7.1.3",
