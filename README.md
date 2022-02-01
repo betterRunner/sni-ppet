@@ -21,6 +21,10 @@ https://user-images.githubusercontent.com/7123136/151733116-f8f13a74-4703-4356-9
 
 https://marketplace.visualstudio.com/items?itemName=goodbetterbest.sni-ppet
 
+## Tutorial
+
+https://sni-ppet.netlify.app
+
 ## Templates
 the demo template repo: https://github.com/betterRunner/sni-ppet-meta-template
 
