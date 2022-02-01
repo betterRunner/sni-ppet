@@ -15,7 +15,7 @@ https://user-images.githubusercontent.com/7123136/151733116-f8f13a74-4703-4356-9
 
 - ✏️ DIY snippet: write your own snippet in ts.
 - 🏷️ Progressive intellisense: provide the progressive completion items to get the final code.
-- ⌨️ Detail options: provide a multiple select to add or remove details to the final code.
+- ⌨️ Detail options: provide a selection popup to add or remove details to the final code.
 
 ## Download
 
