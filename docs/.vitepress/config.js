@@ -20,19 +20,11 @@ module.exports = {
           },
         ],
       },
-      {
-        text: "Advanced",
-        items: [
-          {
-            text: "Todo",
-            link: "/advanced/todo",
-          },
-        ],
-      },
     ],
 
     sidebar: {
       "/": getGuideSidebar(),
+      '/tutorials/basic': []
     },
   },
 };
